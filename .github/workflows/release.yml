@@ -23,16 +23,14 @@ jobs:
 
       - name: Regenerate Android project
         run: |
-          # 保存源代码
           cp -r lib /tmp/lib_backup
           cp pubspec.yaml /tmp/pubspec_backup.yaml
-          
-          # 用 flutter create 生成完整项目结构
           flutter create --org com.example --project-name flutter_toolbox .
-          
-          # 恢复我们的源代码（覆盖模板代码）
           cp -r /tmp/lib_backup/* lib/
           cp /tmp/pubspec_backup.yaml pubspec.yaml
+          # Fix minSdkVersion for torch_light (requires 23+)
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle
 
       - run: flutter pub get
 
