@@ -5,8 +5,17 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,45 +37,61 @@ jobs:
           flutter create --org com.example --project-name flutter_toolbox .
           cp -r /tmp/lib_backup/* lib/
           cp /tmp/pubspec_backup.yaml pubspec.yaml
-
-      - name: Fix minSdkVersion
-        run: |
-          # Show current build.gradle for debugging
-          echo "=== Before ==="
-          grep -n "minSdk" android/app/build.gradle || true
-          # Replace any form of minSdk setting
           cd android/app
           python3 -c "
           import re
           with open('build.gradle', 'r') as f:
               content = f.read()
-          # Handle both Kotlin DSL and Groovy styles
           content = re.sub(r'minSdk\s*=\s*\S+', 'minSdk = 23', content)
           content = re.sub(r'minSdkVersion\s+\S+', 'minSdkVersion 23', content)
           with open('build.gradle', 'w') as f:
               f.write(content)
           "
-          echo "=== After ==="
-          grep -n "minSdk" build.gradle || true
-          # Also try build.gradle.kts if it exists
-          if [ -f build.gradle.kts ]; then
-            python3 -c "
-          import re
-          with open('build.gradle.kts', 'r') as f:
-              content = f.read()
-          content = re.sub(r'minSdk\s*=\s*\S+', 'minSdk = 23', content)
-          with open('build.gradle.kts', 'w') as f:
-              f.write(content)
-          "
-            echo "=== KTS After ==="
-            grep -n "minSdk" build.gradle.kts || true
-          fi
 
       - run: flutter pub get
-
       - run: flutter build apk --release
 
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Regenerate project for web
+        run: |
+          cp -r lib /tmp/lib_backup
+          cp pubspec.yaml /tmp/pubspec_backup.yaml
+          flutter create --org com.example --project-name flutter_toolbox --platforms web .
+          cp -r /tmp/lib_backup/* lib/
+          cp /tmp/pubspec_backup.yaml pubspec.yaml
+
+      - run: flutter pub get
+      - run: flutter build web --release --base-href "/flutter-toolbox/"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy-web:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-web
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
