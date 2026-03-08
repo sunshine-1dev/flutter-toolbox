@@ -14,7 +14,7 @@ dependencies:
   mobile_scanner: ^5.1.1
   torch_light: ^1.0.0
   flutter_compass: ^0.8.0
-  noise_meter: ^5.0.2
+  # noise_meter removed due to audio_streamer gradle incompatibility
   crypto: ^3.0.3
   permission_handler: ^11.3.0
   share_plus: ^9.0.0
