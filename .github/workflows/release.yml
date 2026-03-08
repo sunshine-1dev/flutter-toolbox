@@ -28,9 +28,39 @@ jobs:
           flutter create --org com.example --project-name flutter_toolbox .
           cp -r /tmp/lib_backup/* lib/
           cp /tmp/pubspec_backup.yaml pubspec.yaml
-          # Fix minSdkVersion for torch_light (requires 23+)
-          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle
+
+      - name: Fix minSdkVersion
+        run: |
+          # Show current build.gradle for debugging
+          echo "=== Before ==="
+          grep -n "minSdk" android/app/build.gradle || true
+          # Replace any form of minSdk setting
+          cd android/app
+          python3 -c "
+          import re
+          with open('build.gradle', 'r') as f:
+              content = f.read()
+          # Handle both Kotlin DSL and Groovy styles
+          content = re.sub(r'minSdk\s*=\s*\S+', 'minSdk = 23', content)
+          content = re.sub(r'minSdkVersion\s+\S+', 'minSdkVersion 23', content)
+          with open('build.gradle', 'w') as f:
+              f.write(content)
+          "
+          echo "=== After ==="
+          grep -n "minSdk" build.gradle || true
+          # Also try build.gradle.kts if it exists
+          if [ -f build.gradle.kts ]; then
+            python3 -c "
+          import re
+          with open('build.gradle.kts', 'r') as f:
+              content = f.read()
+          content = re.sub(r'minSdk\s*=\s*\S+', 'minSdk = 23', content)
+          with open('build.gradle.kts', 'w') as f:
+              f.write(content)
+          "
+            echo "=== KTS After ==="
+            grep -n "minSdk" build.gradle.kts || true
+          fi
 
       - run: flutter pub get
 
