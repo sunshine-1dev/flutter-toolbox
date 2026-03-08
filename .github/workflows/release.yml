@@ -21,12 +21,18 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
-      - name: Create local.properties
+      - name: Regenerate Android project
         run: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
-          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
-          echo "flutter.versionCode=1" >> android/local.properties
-          echo "flutter.versionName=1.0.0" >> android/local.properties
+          # 保存源代码
+          cp -r lib /tmp/lib_backup
+          cp pubspec.yaml /tmp/pubspec_backup.yaml
+          
+          # 用 flutter create 生成完整项目结构
+          flutter create --org com.example --project-name flutter_toolbox .
+          
+          # 恢复我们的源代码（覆盖模板代码）
+          cp -r /tmp/lib_backup/* lib/
+          cp /tmp/pubspec_backup.yaml pubspec.yaml
 
       - run: flutter pub get
 
