@@ -21,6 +21,13 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" >> android/local.properties
+          echo "flutter.versionCode=1" >> android/local.properties
+          echo "flutter.versionName=1.0.0" >> android/local.properties
+
       - run: flutter pub get
 
       - run: flutter build apk --release
