@@ -1,0 +1,29 @@
+name: flutter_toolbox
+description: "🧰 Flutter 生活工具箱 - 16+ 实用小工具"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^5.1.1
+  torch_light: ^1.0.0
+  flutter_compass: ^0.8.0
+  noise_meter: ^5.0.2
+  crypto: ^3.0.3
+  permission_handler: ^11.3.0
+  share_plus: ^9.0.0
+  flutter_colorpicker: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
